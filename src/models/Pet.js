@@ -29,9 +29,8 @@ const Pet = sequelize.define(
       type: DataTypes.FLOAT,
     },
     gender: {
-      type: DataTypes.ENUM("macho", "hembra", "no aplica"),
-      allowNull: false,
-      defaultValue: "no aplica",
+      type: DataTypes.ENUM("macho", "hembra"),
+      allowNull: true,
     },
     isActive: {
       type: DataTypes.BOOLEAN,
