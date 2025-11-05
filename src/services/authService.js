@@ -33,13 +33,21 @@ export const getUsers = async (options = {}) => {
 /**
  * Verifica si un usuario existe por email
  * @param {string} email - Email del usuario
+ * @param {string} token - Token JWT para autenticación (opcional)
  * @returns {Promise<boolean>} True si el usuario existe
  */
-export const userExistsByEmail = async (email) => {
+export const userExistsByEmail = async (email, token = null) => {
   try {
-    const response = await authServiceClient.get(`/api/users`, {
+    const config = {
       params: { page: 1, limit: 1000 }, // Obtener todos los usuarios
-    });
+    };
+
+    // Agregar token si está disponible
+    if (token) {
+      config.headers = { Authorization: token };
+    }
+
+    const response = await authServiceClient.get(`/api/users`, config);
 
     if (response.data.success && response.data.data) {
       const users = response.data.data.users;

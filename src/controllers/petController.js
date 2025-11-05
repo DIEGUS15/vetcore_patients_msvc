@@ -1,6 +1,44 @@
 import Pet from "../models/Pet.js";
 import { userExistsByEmail } from "../services/authService.js";
 
+/**
+ * Obtiene una mascota específica por ID
+ */
+export const getPetById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pet = await Pet.findByPk(id);
+
+    if (!pet) {
+      return res.status(404).json({
+        success: false,
+        message: "Pet not found",
+      });
+    }
+
+    // Verificar que la mascota esté activa
+    if (!pet.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: "Pet is not active",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: pet,
+    });
+  } catch (error) {
+    console.error("Error obtaining pet:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error obtaining pet",
+      error: error.message,
+    });
+  }
+};
+
 export const getPets = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -45,8 +83,11 @@ export const createPet = async (req, res) => {
       });
     }
 
+    // Obtener el token del header para pasarlo al Auth Service
+    const token = req.headers.authorization;
+
     // Validar que el owner (email) existe en el Auth Service
-    const ownerExists = await userExistsByEmail(owner);
+    const ownerExists = await userExistsByEmail(owner, token);
     if (!ownerExists) {
       return res.status(400).json({
         message: `The owner with email "${owner}" does not exist. Please provide a valid user email.`,
@@ -101,7 +142,9 @@ export const updatePet = async (req, res) => {
 
     // Validar que el owner existe si se está cambiando
     if (owner && owner !== pet.owner) {
-      const ownerExists = await userExistsByEmail(owner);
+      // Obtener el token del header para pasarlo al Auth Service
+      const token = req.headers.authorization;
+      const ownerExists = await userExistsByEmail(owner, token);
       if (!ownerExists) {
         return res.status(400).json({
           message: `The owner with email "${owner}" does not exist. Please provide a valid user email.`,

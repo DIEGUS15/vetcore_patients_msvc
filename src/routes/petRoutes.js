@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getPets,
+  getPetById,
   createPet,
   updatePet,
   deletePet,
@@ -33,6 +34,17 @@ router.get(
   verifyToken,
   checkRole("admin", "veterinarian", "receptionist"),
   getPets
+);
+
+/**
+ * @route   GET /api/patients/pets/:id
+ * @desc    Get a specific pet by ID
+ * @access  Private (cualquier usuario autenticado)
+ */
+router.get(
+  "/pets/:id",
+  verifyToken,
+  getPetById
 );
 
 /**
