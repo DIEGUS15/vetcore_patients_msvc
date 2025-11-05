@@ -1,4 +1,5 @@
 import Pet from "../models/Pet.js";
+import { userExistsByEmail } from "../services/authService.js";
 
 export const getPets = async (req, res) => {
   try {
@@ -41,6 +42,14 @@ export const createPet = async (req, res) => {
     if (!petName || !owner) {
       return res.status(400).json({
         message: "The petName and owner fields are required.",
+      });
+    }
+
+    // Validar que el owner (email) existe en el Auth Service
+    const ownerExists = await userExistsByEmail(owner);
+    if (!ownerExists) {
+      return res.status(400).json({
+        message: `The owner with email "${owner}" does not exist. Please provide a valid user email.`,
       });
     }
 
@@ -88,6 +97,16 @@ export const updatePet = async (req, res) => {
       return res.status(400).json({
         message: "Cannot update an inactive pet",
       });
+    }
+
+    // Validar que el owner existe si se está cambiando
+    if (owner && owner !== pet.owner) {
+      const ownerExists = await userExistsByEmail(owner);
+      if (!ownerExists) {
+        return res.status(400).json({
+          message: `The owner with email "${owner}" does not exist. Please provide a valid user email.`,
+        });
+      }
     }
 
     // Preparar datos para actualizar

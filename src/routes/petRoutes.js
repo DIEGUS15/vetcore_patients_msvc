@@ -5,10 +5,23 @@ import {
   updatePet,
   deletePet,
 } from "../controllers/petController.js";
+import { fetchUsers } from "../controllers/usersController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { checkRole } from "../middlewares/roleMiddleware.js";
 
 const router = Router();
+
+/**
+ * @route   GET /api/patients/users
+ * @desc    Get users from Auth Service (for pet owner selection)
+ * @access  Private (admin, receptionist)
+ */
+router.get(
+  "/users",
+  verifyToken,
+  checkRole("admin", "receptionist", "veterinarian"),
+  fetchUsers
+);
 
 /**
  * @route   GET /api/patients/pets
