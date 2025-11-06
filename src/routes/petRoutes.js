@@ -27,12 +27,11 @@ router.get(
 /**
  * @route   GET /api/patients/pets
  * @desc    Get all pets with pagination
- * @access  Private (cualquier usuario autenticado)
+ * @access  Private (cualquier usuario autenticado - clientes ven solo sus mascotas)
  */
 router.get(
   "/pets",
   verifyToken,
-  checkRole("admin", "veterinarian", "receptionist"),
   getPets
 );
 

@@ -45,10 +45,18 @@ export const getPets = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
+    // Construir el objeto where
+    const whereClause = {
+      isActive: true,
+    };
+
+    // Si el usuario es un cliente, solo mostrar sus mascotas
+    if (req.user?.role === "client") {
+      whereClause.owner = req.user.email;
+    }
+
     const { count, rows } = await Pet.findAndCountAll({
-      where: {
-        isActive: true,
-      },
+      where: whereClause,
       limit: limit,
       offset: offset,
       order: [["createdAt", "DESC"]],
