@@ -51,7 +51,7 @@ export const getPets = async (req, res) => {
     };
 
     // Si el usuario es un cliente, solo mostrar sus mascotas
-    if (req.user?.role === "client") {
+    if (req.user?.role?.name === "client") {
       whereClause.owner = req.user.email;
     }
 
@@ -100,6 +100,22 @@ export const createPet = async (req, res) => {
       return res.status(400).json({
         message: `The owner with email "${owner}" does not exist. Please provide a valid user email.`,
       });
+    }
+
+    // Validar límite de 5 mascotas para clientes
+    if (req.user?.role?.name === "client") {
+      const clientPetsCount = await Pet.count({
+        where: {
+          owner: req.user.email,
+          isActive: true,
+        },
+      });
+
+      if (clientPetsCount >= 5) {
+        return res.status(400).json({
+          message: "Has alcanzado el límite máximo de 5 mascotas. No puedes registrar más mascotas.",
+        });
+      }
     }
 
     const newPet = await Pet.create({
