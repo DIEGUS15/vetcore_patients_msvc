@@ -85,28 +85,24 @@ export const createPet = async (req, res) => {
     const { photo, petName, species, breed, age, weight, gender, owner } =
       req.body;
 
-    if (!petName || !owner) {
+    // Validar que petName esté presente
+    if (!petName) {
       return res.status(400).json({
-        message: "The petName and owner fields are required.",
+        message: "The petName field is required.",
       });
     }
 
-    // Obtener el token del header para pasarlo al Auth Service
-    const token = req.headers.authorization;
+    // Determinar el owner según el rol del usuario
+    let petOwner;
 
-    // Validar que el owner (email) existe en el Auth Service
-    const ownerExists = await userExistsByEmail(owner, token);
-    if (!ownerExists) {
-      return res.status(400).json({
-        message: `The owner with email "${owner}" does not exist. Please provide a valid user email.`,
-      });
-    }
-
-    // Validar límite de 5 mascotas para clientes
     if (req.user?.role?.name === "client") {
+      // Si es un cliente, asignar automáticamente su email como owner
+      petOwner = req.user.email;
+
+      // Validar límite de 5 mascotas para clientes
       const clientPetsCount = await Pet.count({
         where: {
-          owner: req.user.email,
+          owner: petOwner,
           isActive: true,
         },
       });
@@ -114,6 +110,26 @@ export const createPet = async (req, res) => {
       if (clientPetsCount >= 5) {
         return res.status(400).json({
           message: "Has alcanzado el límite máximo de 5 mascotas. No puedes registrar más mascotas.",
+        });
+      }
+    } else {
+      // Si es admin o receptionist, validar que proporcionen el owner
+      if (!owner) {
+        return res.status(400).json({
+          message: "The owner field is required.",
+        });
+      }
+
+      petOwner = owner;
+
+      // Obtener el token del header para pasarlo al Auth Service
+      const token = req.headers.authorization;
+
+      // Validar que el owner (email) existe en el Auth Service
+      const ownerExists = await userExistsByEmail(petOwner, token);
+      if (!ownerExists) {
+        return res.status(400).json({
+          message: `The owner with email "${petOwner}" does not exist. Please provide a valid user email.`,
         });
       }
     }
@@ -126,7 +142,7 @@ export const createPet = async (req, res) => {
       age,
       weight,
       gender,
-      owner,
+      owner: petOwner,
     });
 
     return res.status(201).json({

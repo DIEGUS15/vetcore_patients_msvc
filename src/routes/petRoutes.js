@@ -49,12 +49,12 @@ router.get(
 /**
  * @route   POST /api/patients/pets
  * @desc    Create a new pet
- * @access  Private (admin, veterinarian)
+ * @access  Private (client, admin, receptionist)
  */
 router.post(
   "/pets",
   verifyToken,
-  checkRole("admin", "receptionist"),
+  checkRole("client", "admin", "receptionist"),
   createPet
 );
 
